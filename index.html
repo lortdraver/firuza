@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Наши Воспоминания</title>
+    <style>
+        :root {
+            --primary-color: #32CD32; /* Салатовый цвет */
+            --primary-hover: #228B22;
+            --bg-dark: #121212;
+            --text-light: #ffffff;
+            --text-muted: #b3b3b3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            z-index: 2;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Четырехъярусный движущийся фон для первого и последнего экранов */
+        .marquee-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            filter: brightness(0.22);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .marquee-row {
+            display: flex;
+            width: max-content;
+        }
+
+        .row-left { animation: scrollLeft 30s linear infinite; }
+        .row-right { animation: scrollRight 30s linear infinite; }
+
+        .marquee-row img {
+            height: 160px;
+            width: auto;
+            margin-right: 15px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        @keyframes scrollLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes scrollRight {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+
+        .overlay-content {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            padding: 20px;
+            max-width: 650px;
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 15px rgba(0,0,0,0.9);
+            line-height: 1.4;
+        }
+
+        /* Кнопки */
+        .btn {
+            background-color: var(--primary-color);
+            color: black;
+            border: none;
+            padding: 15px 45px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 20px rgba(50, 205, 50, 0.4);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        /* Экраны воспоминаний */
+        .content-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .left-side {
+            flex: 1.1;
+            background: #050505;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Сетки для медиа */
+        .media-collage {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            height: 90vh;
+        }
+
+        .collage-video {
+            grid-column: span 3;
+            grid-row: span 2;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        .collage-img {
+            grid-column: span 3;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Сетка для двух фото/видео рядом */
+        .grid-two {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            height: 85vh;
+        }
+
+        .grid-two img, .grid-two video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Вертикальная сетка для Хеллоуина */
+        .grid-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            height: 85vh;
+            justify-content: center;
+        }
+
+        .grid-vertical img {
+            width: auto;
+            max-width: 100%;
+            height: calc(50% - 8px);
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            margin: 0 auto;
+        }
+
+        /* Одиночное видео/фото на всю высоту */
+        .single-media-box {
+            width: 100%;
+            height: 85vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .single-media-box video, .single-media-box img {
+            height: 100%;
+            width: auto;
+            max-width: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Сетка для трех вертикальных фото */
+        .grid-three {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            height: 85vh;
+        }
+
+        .grid-three img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+
+        .right-side {
+            flex: 0.9;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background: linear-gradient(90deg, rgba(18,18,18,1) 0%, rgba(24,24,24,1) 100%);
+            border-left: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+
+        .story-text strong {
+            color: var(--primary-color);
+            font-size: 1.7rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .story-text p {
+            margin-bottom: 15px;
+        }
+
+        .next-btn-container {
+            position: absolute;
+            bottom: 35px;
+            right: 40px;
+        }
+
+        /* Адаптивность под телефоны */
+        @media (max-width: 768px) {
+            .content-layout { flex-direction: column; overflow-y: auto; }
+            .left-side { height: 50vh; flex: none; padding: 10px; }
+            
+            .media-collage { height: 100%; gap: 8px; }
+            .collage-video { grid-column: span 6; grid-row: span 1; height: 22vh; }
+            .collage-img { grid-column: span 3; height: 11vh; }
+            
+            .grid-two, .grid-three, .grid-vertical, .single-media-box { height: 100%; gap: 8px; }
+            .grid-two img, .grid-two video, .grid-three img { height: 45vh; }
+            .grid-vertical img { height: 22vh; width: 100%; object-fit: contain; }
+            .single-media-box video, .single-media-box img { height: 45vh; width: 100%; object-fit: cover; }
+            
+            .marquee-bg { gap: 8px; }
+            .marquee-row img { height: 110px; margin-right: 8px; }
+
+            .right-side { height: auto; flex: none; padding: 20px; border-left: none; }
+            .story-text { max-height: none; font-size: 1rem; }
+            h1 { font-size: 1.8rem; }
+            .next-btn-container { position: static; margin-top: 25px; text-align: right; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Фоновая музыка -->
+    <audio id="bg-music" src="heaven.mp3" loop></audio>
+
+    <!-- ЭКРАН 1: Приветствие с 4 рядами фото -->
+    <div class="screen active" id="screen-welcome">
+        <div class="marquee-bg">
+            <div class="marquee-row row-left">
+                <img src="photo_2026-06-04_22-57-46.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-33.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-34.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-35.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-46.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-33.jpg" alt="">
+            </div>
+            <div class="marquee-row row-right">
+                <img src="photo_2026-06-04_22-57-38.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-39.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-41.jpg" alt="">
+                <img src="photo_2026-06-04_23-02-47.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-38.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-39.jpg" alt="">
+            </div>
+            <div class="marquee-row row-left">
+                <img src="photo_2026-06-04_22-57-50.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-54.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-46.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-01.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-50.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-54.jpg" alt="">
+            </div>
+            <div class="marquee-row row-right">
+                <img src="photo_2026-06-04_22-58-05.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-00.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-58.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-53.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-05.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-00.jpg" alt="">
+            </div>
+        </div>
+        <div class="overlay-content">
+            <h1>Тут собраны все яркие моменты наших отношений</h1>
+            <button class="btn" onclick="startMemoryStory()">Начать</button>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 1: Самый первый день -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="grid-two">
+                    <video src="IMG_2474.MOV" autoplay loop muted playsinline></video>
+                    <video src="IMG_2475.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Тот самый первый день... 🫣❤️</strong>
+                    <p>Помнишь наш самый первый день, когда мы впервые вышли погулять? Всё внутри буквально переворачивалось от волнения, сердце бешено колотилось — особенно в тот самый момент, когда я наконец решился тебе признаться... и тут прямо как назло позвонила твоя мама!</p>
+                    <p>Я так долго и бережно копил деньги на эту нашу самую первую прогулку. Зато как же классно мы провели время! Мы без конца обсуждали абсолютно всё на свете: наши интересы, увлечения, делились мыслями. А потом вместе смотрели кино и впервые пошли кушать в Макдоналдс.</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 2: Наш первый Хеллоуин -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="grid-vertical">
+                    <img src="хелуин.jpg" alt="Halloween 1">
+                    <img src="photo_2026-06-04_22-57-42.jpg" alt="Halloween 2">
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Наш первый Хеллоуин вместе 🎃💀</strong>
+                    <p>Помнишь, как мы решили отпраздновать наш самый первый совместный Хеллоуин и сделать друг другу крутой фейс-арт? Ты подошла к делу максимально ответственно и нарисовала всё так красиво и аккуратно, а у меня, конечно же, вышло немного кривовато!</p>
+                    <p>А потом мы в таком виде пошли пешком из парка прямо до Flame Towers. Нам было так неловко, что мы постояннопрятались от людей, чтобы нас никто не заметил в этих жутких обрасах. Это было невероятно смешно! Безумно ценные времена, по которым я так сильно скучаю.</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 3: Наш первый каток -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="single-media-box">
+                    <video src="IMG_2481.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Наш первый поход на каток ⛸️😂</strong>
+                    <p>А тут мы в первый раз пошли на каток! Мы были словно маленькие дети, которые только-только учатся ходить, и так же забавно пытались кататься на коньках.</p>
+                    <p>Особенно отличился я — пару раз умудрился упасть очень сильно! Но вместо боли мы оба просто покатывались со смеху. Это было невероятно весело, шумно и так искренне!</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 4: Первая прогулка по снегу -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="grid-two">
+                    <img src="photo_2026-06-04_22-57-50.jpg" alt="Snow 1">
+                    <img src="photo_2026-06-04_22-57-50 (2).jpg" alt="Snow 2">
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Наша первая зимняя сказка ❄️</strong>
+                    <p>Помнишь, как мы в самый первый раз вместе гуляли по глубокому снегу? Мы пришли в парк, который тогда только-только открылся и был совсем новым. Вокруг кружились огромные хлопья, а нам было безумно весело и тепло, несмотря на мороз.</p>
+                    <p>Мы дурачились как дети: слепили нашего первого снеговика, без конца бросали друг друга в сугробы и весело играли в снежки. А после, когда пришло время, я проводил тебя прямо до уника и, сам радостно побежал на свой урок.</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 5: Тренд Мистер Сноумен -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="single-media-box">
+                    <video src="IMG_2478.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Наш trend: Mr. Snowman ⛄✨</strong>
+                    <p>А тут мы впервые сняли тренд «Мистер Сноумен», который очень хотели снять целых полтора года!</p>
+                    <p>Мы были такие счастливые, что идет снег и мы вместе гуляем. Нам так круто удалось поймать этот потрясающий момент, чтобы наконец-то снять то, о чем так долго мечтали.</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 6: GameSummit + Sea Breeze -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="media-collage">
+                    <video src="IMG_2437.MOV" class="collage-video" autoplay loop muted playsinline></video>
+                    <img src="photo_2026-06-04_22-58-01.jpg" class="collage-img" alt="">
+                    <img src="photo_2026-06-04_22-58-05.jpg" class="collage-img" alt="">
+                    <img src="photo_2026-06-04_22-58-00.jpg" class="collage-img" alt="">
+                    <img src="photo_2026-06-04_22-57-54.jpg" class="collage-img" alt="">
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Наш отдых в Sea Breeze 🌊</strong>
+                    <p>Сначала мы круто провели время на GameSummit! Помнишь эти искренние, веселые эмоции, когда мы дурачились, безумно радовались и смеялись от всей души?</p>
+                    <p>A потом мы впервые вместе поехали отдыхать в Sea Breeze! Мы провели там незабываемое время у моря. Гуляли по побережью, пили самые разные прохладные смузи, кушали безумно вкусную шаурму и просто наслаждались моментом. Это были по-настоящему самые классные три дня этого лета, наполненные теплом, солнцем и нашей любовью. Хочется возвращаться в эти воспоминания снова и снова!</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 7: Долгожданная встреча-->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="grid-two">
+                    <video src="IMG_2482.MOV" autoplay loop muted playsinline></video>
+                    <video src="2484.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Долгожданные тренды🌹🧱</strong>
+                    <p>А эти тренды мы сняли сразу же после того, как ты вернулась из Узбекистана! Мы так безумно долго хотели записать их, что встретились прямо в первый же день твоего приезда и сразу побежали на нашу локацию снимать.</p>
+                    <p>И тогда же я купил тебе те самые классные розы из LEGO. Мы увлечённо собирали их вместе, а потом, когда пришло время расходиться, ты застеснялась или просто не хотела нести их домой... В итоге я бережно хранил этот букет у себя дома, укутывая теплыми воспоминаниями, пока ты наконец-то их не забрала!</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 8: НОВЫЙ СЛАЙД - Тренд из ТикТока -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="single-media-box">
+                    <video src="2480.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Наш тренд из ТикТока 🎬✨</strong>
+                    <p>А тут мы снимаем тренд, который подсмотрели в ТикТоке! Это был как раз сентябрь — уроки только-только начались, но летняя жара всё ещё вовсю стояла.</p>
+                    <p>Ты тогда нарядилась как настоящая красотка в свою новую одежду, которую купила в Узбекистане, а я пришёл в своих забавных смешных штанах. Мы так круто повеселились, пока записывали это видео, ловя последние тёплые лучи уходящего лета!</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 9: Наш любимый задний двор-->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="single-media-box">
+                    <video src="IMG_2479.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>легендарный двор 💪🏡</strong>
+                    <p>А помнишь этот забавный тренд? Ты тогда была абсолютно уверена, что у нас ничего не получится, и вовсю переживала, что я просто не смогу тебя поднять. Но я же обещал, что справлюсь — и сделал это с лёгкостью, заставив тебя искренне улыбаться!</p>
+                    <p>Самое крутое, что это видео, как и большинство наших лучших трендов, мы сняли на нашем любимом заднем дворе. Ты даже не представляешь, сколько невероятных воспоминаний, смеха, дублей и тепла хранит в себе это место. Настоящая наша личная зона творчества и счастья!</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 10: Первый раз в блоке -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="single-media-box">
+                    <video src="в блоке.MOV" autoplay loop muted playsinline></video>
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Первый раз у тебя в блоке... 🫣🍕🍿</strong>
+                    <p>Помнишь, как мы снимали этот тренд? Это был мой самый первый раз у тебя в блоке! Боже, мне было так безумно страшно заходить туда — сердце колотилось где-то в горле, потому что я жутко боялся, что нас кто-нибудь увидит.</p>
+                    <p>Это было одновременно и пугающе, и так волнительно-радостно! Но я переборол весь свой страх, поднялся к тебе и принёс кучу самых вкусных вкусняшек. Мы безумно уютно сидели, кушали их и вместе смотрели сериал, а уже после — на этой классной волне сняли этот весёлый тренд. Настоящее преодоление ради того, чтобы побыть вдвоём!</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- СТРАНИЦА 11: Белый Город -->
+    <div class="screen screen-story">
+        <div class="content-layout">
+            <div class="left-side">
+                <div class="grid-three">
+                    <img src="photo_2026-06-04_22-57-58.jpg" alt="White City 1">
+                    <img src="photo_2026-06-04_22-57-53.jpg" alt="White City 2">
+                    <img src="photo_2026-06-04_22-57-52.jpg" alt="White City 3">
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="story-text">
+                    <strong>Прогулка по Белому городу 📸</strong>
+                    <p>А помнишь, как в самую середину лета я принес свою цифровую камеру? Стояла безумная жара, мы буквально умирали от жары, но это ничуть не мешало нам наслаждаться моментом.</p>
+                    <p>Мы прошли пешком весь бульвар Белого города, смеялись, фотографировались под тенью деревьев и делали эти классные, атмосферные кадры. Ловить твои живые эмоции на объектив — это что-то особенное. Мы были так счастливы, просто гуляя вместе и разделяя этот жаркий летний день на двоих.</p>
+                </div>
+                <div class="next-btn-container">
+                    <button class="btn" onclick="nextScreen()">Далее</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ФИНАЛЬНЫЙ ЭКРАН с 4 рядами фото на прощание -->
+    <div class="screen" id="screen-final">
+        <div class="marquee-bg">
+            <div class="marquee-row row-left">
+                <img src="photo_2026-06-04_22-57-46.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-33.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-34.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-35.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-46.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-33.jpg" alt="">
+            </div>
+            <div class="marquee-row row-right">
+                <img src="photo_2026-06-04_22-57-38.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-39.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-41.jpg" alt="">
+                <img src="photo_2026-06-04_23-02-47.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-38.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-39.jpg" alt="">
+            </div>
+            <div class="marquee-row row-left">
+                <img src="photo_2026-06-04_22-57-50.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-54.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-46.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-01.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-50.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-54.jpg" alt="">
+            </div>
+            <div class="marquee-row row-right">
+                <img src="photo_2026-06-04_22-58-05.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-00.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-58.jpg" alt="">
+                <img src="photo_2026-06-04_22-57-53.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-05.jpg" alt="">
+                <img src="photo_2026-06-04_22-58-00.jpg" alt="">
+            </div>
+        </div>
+        <div class="overlay-content">
+            <h1>я очень сильно скучаю по тебе, по нам.❤️</h1>
+            <p style="color: var(--text-muted); margin-top: 20px; font-size: 1.2rem; text-shadow: 1px 1px 10px rgba(0,0,0,0.9);"></p>
+        </div>
+    </div>
+
+    <script>
+        let currentScreenIndex = 0;
+        const screens = [];
+        
+        screens.push(document.getElementById('screen-welcome'));
+        document.querySelectorAll('.screen-story').forEach(s => screens.push(s));
+        screens.push(document.getElementById('screen-final'));
+
+        const music = document.getElementById('bg-music');
+
+        function startMemoryStory() {
+            music.play().catch(e => console.log("Музыка ждет взаимодействия:", e));
+            nextScreen();
+        }
+
+        function nextScreen() {
+            if (currentScreenIndex < screens.length - 1) {
+                screens[currentScreenIndex].classList.remove('active');
+                currentScreenIndex++;
+                screens[currentScreenIndex].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
